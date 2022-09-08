@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app/
+    ports:
+      - "8088:8000"
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=django-insecure-oxh04*$c6-nw46t%iixg=o!0awj!6+hmz#4!1^i7utjg@h0b_t
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 192.168.1.247 192.168.6.109 openmrsapi.accelx.net 192.168.1.180 [::1]
+      # 
+      - BAHMNI_API_BASE_URL=https://openemr.accelx.net
+      # - BAHMNI_API_BASE_URL=https://devopenemr.accelx.net
+
+      # postgres
+      # - SQL_ENGINE=django.db.backends.postgresql
+      # - SQL_DATABASE=telemed_api
+      # - SQL_USER=accelx
+      # - SQL_PASSWORD=Accelx123456
+      # - SQL_HOST=db
+      # - SQL_PORT=5432
+      # - DATABASE=postgres
+      # postgres
+      - SQL_ENGINE=django.db.backends.postgresql
+      - SQL_DATABASE=postgres
+      - SQL_USER=postgres
+      - SQL_PASSWORD=changeme
+      - SQL_HOST=192.168.6.146
+      - SQL_PORT=5432
+      - DATABASE=postgres
+  #   depends_on:
+  #     - db
+  # db:
+  #   image: postgres:13.0-alpine
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data/
+  #   environment:
+  #     - POSTGRES_USER=accelx
+  #     - POSTGRES_PASSWORD=Accelx123456
+  #     - POSTGRES_DB=telemed_api
+
+# volumes:
+#   postgres_data:

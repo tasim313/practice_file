@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app/
+    ports:
+      - "8088:8000"
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=django-insecure-oxh04*$c6-nw46t%iixg=o!0awj!6+hmz#4!1^i7utjg@h0b_t
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 192.168.1.247 192.168.6.109 openmrsapi.accelx.net 192.168.1.180 192.168.6.110 [::1]
+      
+      - BAHMNI_API_BASE_URL=https://openemr.accelx.net
+      # - BAHMNI_API_BASE_URL=https://devopenemr.accelx.net
+
+      # postgres
+      - SQL_ENGINE=django.db.backends.postgresql
+      - SQL_DATABASE=telemed_api
+      - SQL_USER=accelx
+      - SQL_PASSWORD=Accelx123456
+      - SQL_HOST=db
+      - SQL_PORT=5432
+      - DATABASE=postgres
+    depends_on:
+      - db
+      - redis
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=accelx
+      - POSTGRES_PASSWORD=Accelx123456
+      - POSTGRES_DB=telemed_api
+  redis:
+    image: redis:alpine
+  celery:
+    build: .
+    command: celery -A BamniApi worker -l info
+    volumes:
+      - .:/usr/src/app/
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=django-insecure-oxh04*$c6-nw46t%iixg=o!0awj!6+hmz#4!1^i7utjg@h0b_t
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 192.168.1.247 192.168.6.109 openmrsapi.accelx.net 192.168.1.180 192.168.6.110 [::1]
+
+      # postgres
+      - SQL_ENGINE=django.db.backends.postgresql
+      - SQL_DATABASE=telemed_api
+      - SQL_USER=accelx
+      - SQL_PASSWORD=Accelx123456
+      - SQL_HOST=db
+      - SQL_PORT=5432
+      - DATABASE=postgres
+ 
+    depends_on:
+      - redis
+  celery-beat:
+    build: .
+    command: celery -A BamniApi beat -l info
+    volumes:
+      - .:/usr/src/app/
+
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=django-insecure-oxh04*$c6-nw46t%iixg=o!0awj!6+hmz#4!1^i7utjg@h0b_t
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 192.168.1.247 192.168.6.109 openmrsapi.accelx.net 192.168.1.180 192.168.6.110 [::1]
+
+      # postgres
+      - SQL_ENGINE=django.db.backends.postgresql
+      - SQL_DATABASE=telemed_api
+      - SQL_USER=accelx
+      - SQL_PASSWORD=Accelx123456
+      - SQL_HOST=db
+      - SQL_PORT=5432
+      - DATABASE=postgres
+ 
+    depends_on:
+      - redis
+  dashboard:
+    build: .
+    command: celery flower -A BamniApi --port=5555 --broker=redis://redis:6379/0
+    ports:
+      - 5555:5555
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=django-insecure-oxh04*$c6-nw46t%iixg=o!0awj!6+hmz#4!1^i7utjg@h0b_t
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 192.168.1.247 192.168.6.109 openmrsapi.accelx.net 192.168.1.180 192.168.6.110 [::1]
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0
+    depends_on:
+      - web
+      - redis
+      - celery
+
+volumes:
+  postgres_data:
